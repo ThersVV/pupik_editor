@@ -2,7 +2,12 @@ use crate::GameState;
 use bevy::prelude::*;
 
 #[derive(Component)]
-struct EditorButton;
+struct EditorButton {
+    selected: bool,
+}
+
+#[derive(Component)]
+struct Selected;
 
 pub struct StructureUIPlugin;
 
@@ -11,7 +16,8 @@ impl Plugin for StructureUIPlugin {
         app.add_systems(OnEnter(GameState::EditorUI), spawn_buttons)
             .add_systems(
                 Update,
-                button_interaction.run_if(in_state(GameState::EditorUI)),
+                (unselected_button_interaction, selected_button_interaction)
+                    .run_if(in_state(GameState::EditorUI)),
             );
     }
 }
@@ -61,7 +67,8 @@ fn spawn_buttons(mut commands: Commands, assets: Res<AssetServer>) {
                         z_index: ZIndex::Local(1),
                         ..default()
                     })
-                    .insert(EditorButton);
+                    .insert(EditorButton { selected: false });
+
                 parent.spawn(ImageBundle {
                     style: Style {
                         position_type: PositionType::Absolute,
@@ -84,22 +91,56 @@ fn spawn_buttons(mut commands: Commands, assets: Res<AssetServer>) {
 /// * `loadtimer` - [Query] for [LoadTimer].
 /// * `tutorial_interaction` - [Query] for [TutorialButton] and its [Interaction] when changed.
 /// * `state` - Resource containing [State]. This game's states are defined in the [GameState] enum.
-fn button_interaction(
+fn unselected_button_interaction(
     mut commands: Commands,
-    mut tutorial_interaction: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<EditorButton>),
+    mut previously_selected: Query<
+        (&mut BackgroundColor, Entity),
+        (With<EditorButton>, With<Selected>),
+    >,
+    mut non_selected: Query<
+        (&Interaction, &mut BackgroundColor, Entity),
+        (Changed<Interaction>, With<EditorButton>, Without<Selected>),
     >,
 ) {
-    //Reacts to interactions with the "How to play" button
-    for (interaction, mut color) in &mut tutorial_interaction {
+    for (interaction, mut color, entity) in &mut non_selected {
         match *interaction {
-            Interaction::Pressed => {}
+            Interaction::Pressed => {
+                for (mut color, previously_selected_button) in &mut previously_selected {
+                    commands
+                        .entity(previously_selected_button)
+                        .remove::<Selected>();
+                    *color = Color::rgba(0., 0., 0., 0.1).into();
+                }
+                commands.entity(entity).insert(Selected);
+                *color = Color::rgba(0., 0., 0., 0.6).into();
+            }
             Interaction::Hovered => {
-                *color = Color::rgba(0., 0., 0., 0.7).into();
+                *color = Color::rgba(0., 0., 0., 0.4).into();
             }
             Interaction::None => {
-                *color = Color::rgba(0., 0., 0., 0.1).into();
+                *color = Color::NONE.into();
+            }
+        }
+    }
+}
+
+fn selected_button_interaction(
+    mut commands: Commands,
+    mut previously_selected: Query<
+        (&Interaction, &mut BackgroundColor, Entity),
+        (Changed<Interaction>, With<EditorButton>, With<Selected>),
+    >,
+) {
+    for (interaction, mut color, entity) in &mut previously_selected {
+        match *interaction {
+            Interaction::Pressed => {
+                *color = Color::rgba(1., 0.8, 0.9, 0.6).into();
+            }
+            Interaction::Hovered => {
+                *color = Color::rgba(1., 0.8, 0.9, 0.5).into();
+            }
+            Interaction::None => {
+                *color = Color::rgba(1., 0.8, 0.9, 0.4).into();
             }
         }
     }
