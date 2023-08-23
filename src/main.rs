@@ -166,7 +166,7 @@ fn load_all(
             Some(Vec2::splat(10.0)),
             Some(Vec2::splat(10.0)),
         ),
-        SheetInfo::new("combined_sheet.png", 1932., 223., 6, 1, None, None),
+        SheetInfo::new("combined_sheet.png", 1932. / 6., 223., 6, 1, None, None),
     ];
     for sheet in init_arr {
         let image = assets.load(sheet.name);
@@ -203,12 +203,12 @@ fn load_all(
     }
     commands.insert_resource(ImagePaths {
         vec: Vec::from([
-            "planet_sheet.png".into(),
             "blackhole_sheet.png".into(),
-            "energy_sheet.png".into(),
             "duha.png".into(),
+            "energy_sheet.png".into(),
             "lovesheet.png".into(),
             "plane_sheet1.png".into(),
+            "planet_sheet.png".into(),
         ]),
     })
 }

@@ -1,7 +1,6 @@
-use crate::{GameState, ImagePaths, UnicornSheet};
+use crate::{CombinedSheet, GameState};
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_mouse_tracking_plugin::*;
 
 #[derive(Component)]
 pub struct Player;
@@ -30,13 +29,13 @@ fn movement(
     }
 }
 
-fn spawn_player(mut commands: Commands) {
-    let mut sprite = TextureAtlasSprite::new(0);
-    sprite.custom_size = Some(Vec2::new(100., 120.));
+fn spawn_player(mut commands: Commands, texture_atlas: Res<CombinedSheet>) {
+    let sprite = TextureAtlasSprite::new(0);
 
     let player = commands
         .spawn(SpriteSheetBundle {
             sprite,
+            texture_atlas: texture_atlas.0.clone(),
             transform: Transform {
                 translation: Vec3::new(100.0, 100.0, 900.0),
                 scale: Vec3::splat(1.0),

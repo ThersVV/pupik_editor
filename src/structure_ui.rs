@@ -2,7 +2,9 @@ use crate::{mouse::Player, CombinedSheet, GameState, ImagePaths, PrimaryWindow};
 use bevy::prelude::*;
 
 #[derive(Component)]
-struct EditorButton;
+struct EditorButton {
+    index: usize,
+}
 
 #[derive(Component)]
 struct Selected;
@@ -26,8 +28,6 @@ impl Plugin for StructureUIPlugin {
 /// * `assets` - [AssetServer]. Used to load font.
 fn spawn_buttons(
     mut commands: Commands,
-    assets: Res<AssetServer>,
-    image_paths: Res<ImagePaths>,
     sheet: Res<CombinedSheet>,
     q_windows: Query<&Window, With<PrimaryWindow>>,
 ) {
@@ -66,7 +66,7 @@ fn spawn_buttons(
                         z_index: ZIndex::Local(1),
                         ..default()
                     })
-                    .insert(EditorButton);
+                    .insert(EditorButton { index: i });
                 /* parent.spawn(ImageBundle {
                     style: Style {
                         position_type: PositionType::Absolute,
@@ -88,7 +88,11 @@ fn spawn_buttons(
             texture_atlas: sheet.0.clone(),
             sprite: TextureAtlasSprite::new(i),
             transform: Transform {
-                translation: Vec3::new(i as f32, w_height * -0.5 + 50., 900.0),
+                translation: Vec3::new(
+                    w_width * -0.5 + w_width / 6. * (i as f32 + 0.5),
+                    w_height * -0.5 + 50.,
+                    900.0,
+                ),
                 scale: Vec3::splat(w_width / 1932.),
                 ..Default::default()
             },
@@ -113,11 +117,10 @@ fn unselected_button_interaction(
         (&Interaction, &mut BackgroundColor, Entity, &EditorButton),
         (Changed<Interaction>, With<EditorButton>, Without<Selected>),
     >,
-    mut player_query: Query<&mut Sprite, With<Player>>,
-    spritesheet: Res<CombinedSheet>,
+    mut player_query: Query<&mut TextureAtlasSprite, With<Player>>,
 ) {
     let idle_color = Color::NONE.into();
-    for (interaction, mut color, entity, button_with_handle) in &mut non_selected {
+    for (interaction, mut color, entity, button_index) in &mut non_selected {
         match *interaction {
             Interaction::Pressed => {
                 for (mut color, previously_selected_button) in &mut previously_selected {
@@ -128,6 +131,9 @@ fn unselected_button_interaction(
                 }
                 commands.entity(entity).insert(Selected);
                 *color = Color::rgba(0., 0., 0., 0.6).into();
+                for mut sprite in player_query.iter_mut() {
+                    sprite.index = button_index.index;
+                }
             }
             Interaction::Hovered => {
                 *color = Color::rgba(0., 0., 0., 0.4).into();
