@@ -22,9 +22,10 @@ fn movement(
     q_windows: Query<&Window, With<PrimaryWindow>>,
 ) {
     for mut transform in player_query.iter_mut() {
-        if let Some(position) = q_windows.single().cursor_position() {
-            transform.translation.x = position.x - 760.;
-            transform.translation.y = -1. * position.y + 430.;
+        let window = q_windows.single();
+        if let Some(position) = window.cursor_position() {
+            transform.translation.x = position.x - (window.width() / 2.);
+            transform.translation.y = -1. * position.y + (window.height() / 2.);
         }
     }
 }
