@@ -1,10 +1,8 @@
-use crate::GameState;
+use crate::{mouse::Player, CombinedSheet, GameState, ImagePaths, PrimaryWindow};
 use bevy::prelude::*;
 
 #[derive(Component)]
-struct EditorButton {
-    selected: bool,
-}
+struct EditorButton;
 
 #[derive(Component)]
 struct Selected;
@@ -26,15 +24,15 @@ impl Plugin for StructureUIPlugin {
 /// # Arguments
 /// * `commands` - [Commands].
 /// * `assets` - [AssetServer]. Used to load font.
-fn spawn_buttons(mut commands: Commands, assets: Res<AssetServer>) {
-    let image_vec: Vec<UiImage> = Vec::from([
-        assets.load("planet_sheet.png").into(),
-        assets.load("blackhole_sheet.png").into(),
-        assets.load("energy_sheet.png").into(),
-        assets.load("duha.png").into(),
-        assets.load("lovesheet.png").into(),
-        assets.load("plane_sheet1.png").into(),
-    ]);
+fn spawn_buttons(
+    mut commands: Commands,
+    assets: Res<AssetServer>,
+    image_paths: Res<ImagePaths>,
+    sheet: Res<CombinedSheet>,
+    q_windows: Query<&Window, With<PrimaryWindow>>,
+) {
+    let window = q_windows.single();
+    let (w_width, w_height) = (window.width(), window.height());
     commands
         .spawn(NodeBundle {
             style: Style {
@@ -52,9 +50,10 @@ fn spawn_buttons(mut commands: Commands, assets: Res<AssetServer>) {
                 parent
                     .spawn(ButtonBundle {
                         style: Style {
-                            position_type: PositionType::Relative,
+                            position_type: PositionType::Absolute,
                             width: Val::Percent(100.0 / 6.0),
                             height: Val::Percent(100.0),
+                            left: Val::Percent(100.0 / 6.0 * i as f32),
                             border: UiRect {
                                 right: Val::Px(0.5),
                                 top: Val::Px(1.0),
@@ -67,9 +66,8 @@ fn spawn_buttons(mut commands: Commands, assets: Res<AssetServer>) {
                         z_index: ZIndex::Local(1),
                         ..default()
                     })
-                    .insert(EditorButton { selected: false });
-
-                parent.spawn(ImageBundle {
+                    .insert(EditorButton);
+                /* parent.spawn(ImageBundle {
                     style: Style {
                         position_type: PositionType::Absolute,
                         max_width: Val::Percent(100.0 / 12.0),
@@ -78,11 +76,25 @@ fn spawn_buttons(mut commands: Commands, assets: Res<AssetServer>) {
                         bottom: Val::Percent(3.),
                         ..default()
                     },
-                    image: image_vec[i].clone(),
+                    image: assets.load(image_paths.vec[i].clone()).into(),
+                    z_index: ZIndex::Local(2),
                     ..default()
-                });
+                }) */
             }
         });
+
+    for i in 0..6 {
+        commands.spawn(SpriteSheetBundle {
+            texture_atlas: sheet.0.clone(),
+            sprite: TextureAtlasSprite::new(i),
+            transform: Transform {
+                translation: Vec3::new(i as f32, w_height * -0.5 + 50., 900.0),
+                scale: Vec3::splat(w_width / 1932.),
+                ..Default::default()
+            },
+            ..Default::default()
+        });
+    }
 }
 
 ///Handles interactions with the [TutorialButton].
@@ -95,21 +107,24 @@ fn unselected_button_interaction(
     mut commands: Commands,
     mut previously_selected: Query<
         (&mut BackgroundColor, Entity),
-        (With<EditorButton>, With<Selected>),
+        (With<Selected>, With<EditorButton>),
     >,
     mut non_selected: Query<
-        (&Interaction, &mut BackgroundColor, Entity),
+        (&Interaction, &mut BackgroundColor, Entity, &EditorButton),
         (Changed<Interaction>, With<EditorButton>, Without<Selected>),
     >,
+    mut player_query: Query<&mut Sprite, With<Player>>,
+    spritesheet: Res<CombinedSheet>,
 ) {
-    for (interaction, mut color, entity) in &mut non_selected {
+    let idle_color = Color::NONE.into();
+    for (interaction, mut color, entity, button_with_handle) in &mut non_selected {
         match *interaction {
             Interaction::Pressed => {
                 for (mut color, previously_selected_button) in &mut previously_selected {
                     commands
                         .entity(previously_selected_button)
                         .remove::<Selected>();
-                    *color = Color::rgba(0., 0., 0., 0.1).into();
+                    *color = idle_color;
                 }
                 commands.entity(entity).insert(Selected);
                 *color = Color::rgba(0., 0., 0., 0.6).into();
@@ -118,29 +133,28 @@ fn unselected_button_interaction(
                 *color = Color::rgba(0., 0., 0., 0.4).into();
             }
             Interaction::None => {
-                *color = Color::NONE.into();
+                *color = idle_color;
             }
         }
     }
 }
 
 fn selected_button_interaction(
-    mut commands: Commands,
     mut previously_selected: Query<
-        (&Interaction, &mut BackgroundColor, Entity),
+        (&Interaction, &mut BackgroundColor),
         (Changed<Interaction>, With<EditorButton>, With<Selected>),
     >,
 ) {
-    for (interaction, mut color, entity) in &mut previously_selected {
+    for (interaction, mut color) in &mut previously_selected {
         match *interaction {
             Interaction::Pressed => {
-                *color = Color::rgba(1., 0.8, 0.9, 0.6).into();
+                *color = Color::rgba(1., 0.8, 0.9, 0.9).into();
             }
             Interaction::Hovered => {
-                *color = Color::rgba(1., 0.8, 0.9, 0.5).into();
+                *color = Color::rgba(1., 0.8, 0.9, 0.8).into();
             }
             Interaction::None => {
-                *color = Color::rgba(1., 0.8, 0.9, 0.4).into();
+                *color = Color::rgba(1., 0.8, 0.9, 0.6).into();
             }
         }
     }

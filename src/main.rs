@@ -1,8 +1,11 @@
-#![windows_subsystem = "windows"]
-
+/* #![windows_subsystem = "windows"]
+ */
 use bevy::prelude::*;
 use bevy::window::*;
 use bevy::winit::WinitWindows;
+use bevy_mouse_tracking_plugin::{
+    mouse_motion::MouseMotionPlugin, mouse_pos::InitMouseTracking, MainCamera,
+};
 use bevy_rapier2d::prelude::*;
 use winit::window::Icon;
 
@@ -14,6 +17,10 @@ pub enum GameState {
     #[default]
     EditorUI,
 }
+
+///[Handle] for combined [TextureAtlas].
+#[derive(Resource)]
+pub struct CombinedSheet(pub Handle<TextureAtlas>);
 
 ///[Handle] for unicorn [TextureAtlas].
 #[derive(Resource)]
@@ -58,8 +65,18 @@ pub struct LoveSheet(pub Handle<TextureAtlas>);
 #[derive(Resource)]
 pub struct KofolaSheet(pub Handle<TextureAtlas>);
 
+#[derive(Resource)]
+pub struct ImagePaths {
+    vec: Vec<String>,
+}
+
+mod cursor;
+mod mouse;
 mod structure_ui;
+use cursor::CursorPlugin;
+use mouse::MousePlugin;
 use structure_ui::StructureUIPlugin;
+
 fn main() {
     App::new()
         .insert_resource(ClearColor(CLEAR))
@@ -71,8 +88,8 @@ fn main() {
                     primary_window: Some(Window {
                         title: "pupik".to_string(),
                         present_mode: PresentMode::Fifo,
-                        position: WindowPosition::At(IVec2::new(100, 0)),
-                        /* mode: WindowMode::Fullscreen, */
+                        position: WindowPosition::At(IVec2::new(100, 0)),/* 
+                        mode: WindowMode::Fullscreen, */
                         ..Default::default()
                     }),
                     ..Default::default()
@@ -80,8 +97,11 @@ fn main() {
         )
         .add_systems(Startup, (set_window_icon, spawn_camera))
         .add_systems(PreStartup, load_all)
-        .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
-        .add_plugins(StructureUIPlugin)
+        .add_plugins((
+            RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0),
+            MouseMotionPlugin,
+        ))
+        .add_plugins((StructureUIPlugin, MousePlugin, CursorPlugin))
         //.add_plugin(RapierDebugRenderPlugin::default())
         .insert_resource(RapierConfiguration {
             gravity: Vec2::splat(0.),
@@ -132,11 +152,11 @@ fn load_all(
     }
     let init_arr = [
         SheetInfo::new("duha.png", 21., 1., 1, 1, None, None),
-        SheetInfo::new("planet_sheet.png", 100., 100., 15, 1, None, None),
-        SheetInfo::new("plane_sheet1.png", 322., 108., 2, 1, None, None),
-        SheetInfo::new("energy_sheet.png", 243., 117., 3, 1, None, None),
+        SheetInfo::new("planet_sheet.png", 100., 100., 1, 1, None, None),
+        SheetInfo::new("plane_sheet1.png", 322., 108., 1, 1, None, None),
+        SheetInfo::new("energy_sheet.png", 243., 117., 1, 1, None, None),
         SheetInfo::new("blackhole_sheet.png", 223., 223., 1, 1, None, None),
-        SheetInfo::new("lovesheet.png", 100., 100., 2, 1, None, None),
+        SheetInfo::new("lovesheet.png", 100., 100., 1, 1, None, None),
         SheetInfo::new(
             "unicorn_sheet.png",
             200.,
@@ -146,6 +166,7 @@ fn load_all(
             Some(Vec2::splat(10.0)),
             Some(Vec2::splat(10.0)),
         ),
+        SheetInfo::new("combined_sheet.png", 1932., 223., 6, 1, None, None),
     ];
     for sheet in init_arr {
         let image = assets.load(sheet.name);
@@ -174,11 +195,22 @@ fn load_all(
             "lovesheet.png" => commands.insert_resource(LoveSheet(atlas_handle)),
             "eggsheet.png" => commands.insert_resource(EggSheet(atlas_handle)),
             "kofolasheet.png" => commands.insert_resource(KofolaSheet(atlas_handle)),
+            "combined_sheet.png" => commands.insert_resource(CombinedSheet(atlas_handle)),
             _ => {
                 panic!("=============FILE NAME MISSING IN MAIN.RS MATCH EXPRESSION!=============");
             }
         };
     }
+    commands.insert_resource(ImagePaths {
+        vec: Vec::from([
+            "planet_sheet.png".into(),
+            "blackhole_sheet.png".into(),
+            "energy_sheet.png".into(),
+            "duha.png".into(),
+            "lovesheet.png".into(),
+            "plane_sheet1.png".into(),
+        ]),
+    })
 }
 
 /// Spawns the camera.
@@ -187,7 +219,7 @@ fn load_all(
 fn spawn_camera(mut commands: Commands) {
     let mut camera = Camera2dBundle {
         transform: Transform {
-            translation: Vec3::new(0., 0., 10000.),
+            translation: Vec3::new(0., 0., 1000.),
             ..default()
         },
         ..default()
@@ -199,11 +231,15 @@ fn spawn_camera(mut commands: Commands) {
                                                                              width: 1. * RESOLUTION,
                                                                              height: 0.,
                                                                          }, */
-        scale: 5.,
+        scale: 1.,
         ..Default::default()
     };
 
-    commands.spawn(camera);
+    commands
+        .spawn(camera)
+        .add(InitMouseTracking)
+        //.add(InitWorldTracking)
+        .insert(MainCamera);
 }
 
 /// A cheat to set the window icon.
