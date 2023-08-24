@@ -65,20 +65,18 @@ fn spawn_selected_item(
     texture_atlas: Res<CombinedSheet>,
     mut editor_tool_q: Query<(&TextureAtlasSprite, &Transform, &mut EditorTool), With<EditorTool>>,
     buttons: Res<Input<MouseButton>>,
+    q_windows: Query<&Window, With<PrimaryWindow>>,
 ) {
     for (sprite, trans, mut tool) in editor_tool_q.iter_mut() {
         if !buttons.pressed(MouseButton::Left) {
             tool.is_left_clicked = false;
             return;
         }
-        if tool.is_left_clicked {
+        if tool.is_left_clicked || trans.translation.y < q_windows.single().height() * -0.35 {
             return;
         }
-
         let mut new_trans = trans.clone();
-        let idk = trans.translation.z - (random::<f32>() * 100.) + 1.;
-        new_trans.translation.z = idk;
-        println!("{:?}", idk);
+        new_trans.translation.z = trans.translation.z - (random::<f32>() * 100.) + 1.;
 
         let item = commands
             .spawn(SpriteSheetBundle {

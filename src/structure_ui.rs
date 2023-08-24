@@ -1,4 +1,4 @@
-use crate::{mouse::EditorTool, CombinedSheet, GameState, ImagePaths, PrimaryWindow};
+use crate::{mouse::EditorTool, CombinedSheet, GameState, PrimaryWindow};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -13,7 +13,7 @@ pub struct StructureUIPlugin;
 
 impl Plugin for StructureUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::EditorUI), spawn_buttons)
+        app.add_systems(OnEnter(GameState::EditorUI), spawn_main_buttons)
             .add_systems(
                 Update,
                 (unselected_button_interaction, selected_button_interaction)
@@ -22,11 +22,12 @@ impl Plugin for StructureUIPlugin {
     }
 }
 
+fn spawn_eraser(mut commands: Commands) {}
 ///Spawns clickable background button together with the "How to play" button as its child
 /// # Arguments
 /// * `commands` - [Commands].
 /// * `assets` - [AssetServer]. Used to load font.
-fn spawn_buttons(
+fn spawn_main_buttons(
     mut commands: Commands,
     sheet: Res<CombinedSheet>,
     q_windows: Query<&Window, With<PrimaryWindow>>,
@@ -73,19 +74,6 @@ fn spawn_buttons(
                 } else {
                     parent.spawn(button).insert(EditorButton { index: i });
                 }
-                /* parent.spawn(ImageBundle {
-                    style: Style {
-                        position_type: PositionType::Absolute,
-                        max_width: Val::Percent(100.0 / 12.0),
-                        max_height: Val::Percent(90.),
-                        left: Val::Percent(100.0 / 6.0 * (i as f32) + 4.4),
-                        bottom: Val::Percent(3.),
-                        ..default()
-                    },
-                    image: assets.load(image_paths.vec[i].clone()).into(),
-                    z_index: ZIndex::Local(2),
-                    ..default()
-                }) */
             }
         });
 
