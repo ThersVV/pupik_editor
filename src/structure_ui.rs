@@ -1,4 +1,4 @@
-use crate::{mouse::Player, CombinedSheet, GameState, ImagePaths, PrimaryWindow};
+use crate::{mouse::EditorTool, CombinedSheet, GameState, ImagePaths, PrimaryWindow};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -123,7 +123,7 @@ fn unselected_button_interaction(
         (&Interaction, &mut BackgroundColor, Entity, &EditorButton),
         (Changed<Interaction>, With<EditorButton>, Without<Selected>),
     >,
-    mut player_query: Query<(&mut TextureAtlasSprite, &mut Transform), With<Player>>,
+    mut editor_tool_query: Query<(&mut TextureAtlasSprite, &mut Transform), With<EditorTool>>,
 ) {
     let idle_color = Color::NONE.into();
     for (interaction, mut color, entity, button_index) in &mut non_selected {
@@ -137,7 +137,7 @@ fn unselected_button_interaction(
                 }
                 commands.entity(entity).insert(Selected);
                 *color = Color::rgba(0., 0., 0., 0.6).into();
-                for (mut sprite, mut transform) in player_query.iter_mut() {
+                for (mut sprite, mut transform) in editor_tool_query.iter_mut() {
                     sprite.index = button_index.index;
                     if button_index.index == 2 || button_index.index == 4 {
                         transform.scale = Vec3::splat(0.6);
