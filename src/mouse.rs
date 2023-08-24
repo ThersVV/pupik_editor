@@ -18,10 +18,10 @@ pub struct MousePlugin;
 
 impl Plugin for MousePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::EditorUI), spawn_editor_tool)
+        app.add_systems(OnEnter(GameState::Building), spawn_editor_tool)
             .add_systems(
                 Update,
-                (movement, spawn_selected_item).run_if(in_state(GameState::EditorUI)),
+                (movement, spawn_selected_item).run_if(in_state(GameState::Building)),
             );
     }
 }

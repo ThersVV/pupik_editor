@@ -1,4 +1,4 @@
-use crate::{mouse::EditorTool, CombinedSheet, GameState, PrimaryWindow};
+use crate::{mouse::EditorTool, CombinedSheet, EraserSheet, GameState, PrimaryWindow};
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -13,16 +13,54 @@ pub struct StructureUIPlugin;
 
 impl Plugin for StructureUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(OnEnter(GameState::EditorUI), spawn_main_buttons)
-            .add_systems(
-                Update,
-                (unselected_button_interaction, selected_button_interaction)
-                    .run_if(in_state(GameState::EditorUI)),
-            );
+        app.add_systems(
+            OnEnter(GameState::Building),
+            (spawn_main_buttons, spawn_eraser),
+        )
+        .add_systems(
+            Update,
+            (unselected_button_interaction, selected_button_interaction)
+                .run_if(in_state(GameState::Building)),
+        );
     }
 }
 
-fn spawn_eraser(mut commands: Commands) {}
+fn spawn_eraser(
+    mut commands: Commands,
+    eraser_texture: Res<EraserSheet>,
+    assets: Res<AssetServer>,
+    q_windows: Query<&Window, With<PrimaryWindow>>,
+) {
+    commands.spawn(ButtonBundle {
+        style: Style {
+            position_type: PositionType::Absolute,
+            width: Val::Px(80.),
+            height: Val::Px(80.),
+            right: Val::Percent(3.),
+            top: Val::Percent(3.),
+            border: UiRect::all(Val::Px(3.)),
+            ..default()
+        },
+        //image: assets.load("eraser.png").into(),
+        border_color: Color::rgba(0., 0., 0., 1.0).into(),
+        background_color: Color::NONE.into(),
+        ..default()
+    });
+
+    let window = q_windows.single();
+    let (w_width, w_height) = (window.width(), window.height());
+
+    commands.spawn(SpriteSheetBundle {
+        sprite: TextureAtlasSprite::new(0),
+        texture_atlas: eraser_texture.0.clone(),
+        transform: Transform {
+            translation: Vec3::new(w_width * 0.47 - 40., w_height * 0.47 - 40., 0.),
+            scale: Vec3::splat(80. / 256.),
+            ..Default::default()
+        },
+        ..Default::default()
+    });
+}
 ///Spawns clickable background button together with the "How to play" button as its child
 /// # Arguments
 /// * `commands` - [Commands].

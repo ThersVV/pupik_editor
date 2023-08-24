@@ -15,8 +15,12 @@ pub const RESOLUTION: f32 = 1920. / 1080.;
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Copy, Default, States)]
 pub enum GameState {
     #[default]
-    EditorUI,
+    Building,
 }
+
+///[Handle] for eraser [TextureAtlas].
+#[derive(Resource)]
+pub struct EraserSheet(pub Handle<TextureAtlas>);
 
 ///[Handle] for combined [TextureAtlas].
 #[derive(Resource)]
@@ -167,6 +171,7 @@ fn load_all(
             Some(Vec2::splat(10.0)),
         ),
         SheetInfo::new("combined_sheet.png", 1932. / 6., 223., 6, 1, None, None),
+        SheetInfo::new("eraser.png", 256., 256., 1, 1, None, None),
     ];
     for sheet in init_arr {
         let image = assets.load(sheet.name);
@@ -196,6 +201,7 @@ fn load_all(
             "eggsheet.png" => commands.insert_resource(EggSheet(atlas_handle)),
             "kofolasheet.png" => commands.insert_resource(KofolaSheet(atlas_handle)),
             "combined_sheet.png" => commands.insert_resource(CombinedSheet(atlas_handle)),
+            "eraser.png" => commands.insert_resource(EraserSheet(atlas_handle)),
             _ => {
                 panic!("=============FILE NAME MISSING IN MAIN.RS MATCH EXPRESSION!=============");
             }
