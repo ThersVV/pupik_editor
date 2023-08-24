@@ -47,26 +47,32 @@ fn spawn_buttons(
         })
         .with_children(|parent| {
             for i in 0..6 {
-                parent
-                    .spawn(ButtonBundle {
-                        style: Style {
-                            position_type: PositionType::Absolute,
-                            width: Val::Percent(100.0 / 6.0),
-                            height: Val::Percent(100.0),
-                            left: Val::Percent(100.0 / 6.0 * i as f32),
-                            border: UiRect {
-                                right: Val::Px(0.5),
-                                top: Val::Px(1.0),
-                                ..Default::default()
-                            },
-                            ..default()
+                let button = ButtonBundle {
+                    style: Style {
+                        position_type: PositionType::Absolute,
+                        width: Val::Percent(100.0 / 6.0),
+                        height: Val::Percent(100.0),
+                        left: Val::Percent(100.0 / 6.0 * i as f32),
+                        border: UiRect {
+                            right: Val::Px(0.5),
+                            top: Val::Px(1.0),
+                            ..Default::default()
                         },
-                        border_color: Color::rgba(0., 0., 0., 0.6).into(),
-                        background_color: BackgroundColor(Color::NONE),
-                        z_index: ZIndex::Local(1),
                         ..default()
-                    })
-                    .insert(EditorButton { index: i });
+                    },
+                    border_color: Color::rgba(0., 0., 0., 0.6).into(),
+                    background_color: BackgroundColor(Color::NONE),
+                    z_index: ZIndex::Local(1),
+                    ..default()
+                };
+                if i == 0 {
+                    parent
+                        .spawn(button)
+                        .insert(Selected)
+                        .insert(EditorButton { index: i });
+                } else {
+                    parent.spawn(button).insert(EditorButton { index: i });
+                }
                 /* parent.spawn(ImageBundle {
                     style: Style {
                         position_type: PositionType::Absolute,
@@ -117,7 +123,7 @@ fn unselected_button_interaction(
         (&Interaction, &mut BackgroundColor, Entity, &EditorButton),
         (Changed<Interaction>, With<EditorButton>, Without<Selected>),
     >,
-    mut player_query: Query<&mut TextureAtlasSprite, With<Player>>,
+    mut player_query: Query<(&mut TextureAtlasSprite, &mut Transform), With<Player>>,
 ) {
     let idle_color = Color::NONE.into();
     for (interaction, mut color, entity, button_index) in &mut non_selected {
@@ -131,8 +137,13 @@ fn unselected_button_interaction(
                 }
                 commands.entity(entity).insert(Selected);
                 *color = Color::rgba(0., 0., 0., 0.6).into();
-                for mut sprite in player_query.iter_mut() {
+                for (mut sprite, mut transform) in player_query.iter_mut() {
                     sprite.index = button_index.index;
+                    if button_index.index == 2 || button_index.index == 4 {
+                        transform.scale = Vec3::splat(0.6);
+                    } else {
+                        transform.scale = Vec3::splat(1.);
+                    }
                 }
             }
             Interaction::Hovered => {
