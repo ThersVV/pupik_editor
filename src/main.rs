@@ -16,6 +16,7 @@ pub const RESOLUTION: f32 = 1920. / 1080.;
 pub enum GameState {
     #[default]
     Building,
+    Erasing,
 }
 
 ///[Handle] for eraser [TextureAtlas].
@@ -170,7 +171,7 @@ fn load_all(
             Some(Vec2::splat(10.0)),
             Some(Vec2::splat(10.0)),
         ),
-        SheetInfo::new("combined_sheet.png", 1932. / 6., 223., 6, 1, None, None),
+        SheetInfo::new("combined_sheet.png", 2254. / 7., 223., 7, 1, None, None),
         SheetInfo::new("eraser.png", 256., 256., 1, 1, None, None),
     ];
     for sheet in init_arr {
