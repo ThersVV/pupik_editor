@@ -185,7 +185,6 @@ fn spawn_main_buttons(
     let texture = assets.get(&sheet.0).unwrap();
     let sprite_width = texture.size.x / texture.textures.len() as f32;
     let sprite_height = texture.size.y;
-
     for i in 0..6 {
         commands
             .spawn(SpriteSheetBundle {
@@ -197,13 +196,17 @@ fn spawn_main_buttons(
                         w_height * -0.5 + 50.,
                         900.0,
                     ),
-                    scale: Vec3::splat(w_width / texture.size.x),
+                    scale: Vec3::new(
+                        (w_width / 6.) / sprite_width,
+                        (w_height * 0.15) / sprite_height,
+                        1.,
+                    ),
                     ..Default::default()
                 },
                 ..Default::default()
             })
             .insert(UISprite {
-                sprite_size: Vec2::new(sprite_width, sprite_height),
+                sprite_size: Vec2::new(w_width / 6., w_height * 0.15),
             });
     }
 }
