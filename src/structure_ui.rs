@@ -14,6 +14,9 @@ struct EraserButton;
 struct Selected;
 
 #[derive(Component)]
+struct ApplyDefaultColoring;
+
+#[derive(Component)]
 pub struct UISprite {
     sprite_size: Vec2,
 }
@@ -26,9 +29,11 @@ impl Plugin for StructureUIPlugin {
             .add_systems(
                 Update,
                 (
-                    unselected_button_interaction,
-                    selected_button_interaction,
+                    unselected_button_coloring,
+                    selected_button_coloring,
                     eraser_button_interaction,
+                    change_selection,
+                    select_item,
                 ),
             );
     }
@@ -37,16 +42,12 @@ impl Plugin for StructureUIPlugin {
 fn eraser_button_interaction(
     mut next: ResMut<NextState<GameState>>,
     state: Res<State<GameState>>,
-    mut eraser_button_q: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<EraserButton>),
-    >,
-    mut editor_tool_query: Query<(&mut TextureAtlasSprite), With<EditorTool>>,
+    eraser_button_q: Query<&Interaction, (Changed<Interaction>, With<EraserButton>)>,
+    mut editor_tool_query: Query<&mut TextureAtlasSprite, With<EditorTool>>,
 ) {
-    for (interaction, mut color) in &mut eraser_button_q {
+    for interaction in eraser_button_q.iter() {
         match *interaction {
             Interaction::Pressed => {
-                *color = Color::rgba(1., 0.8, 0.9, 0.9).into();
                 if state.get() != &GameState::Erasing {
                     for mut sprite in editor_tool_query.iter_mut() {
                         sprite.index = 6;
@@ -54,12 +55,7 @@ fn eraser_button_interaction(
                     next.set(GameState::Erasing);
                 }
             }
-            Interaction::Hovered => {
-                *color = Color::rgba(1., 0.8, 0.9, 0.8).into();
-            }
-            Interaction::None => {
-                *color = Color::rgba(1., 0.8, 0.9, 0.6).into();
-            }
+            _ => {}
         }
     }
 }
@@ -101,7 +97,8 @@ fn spawn_eraser(
             background_color: Color::NONE.into(),
             ..default()
         })
-        .insert(EraserButton);
+        .insert(EraserButton)
+        .insert(ApplyDefaultColoring);
 
     let window = q_windows.single();
     let (w_width, w_height) = (window.width(), window.height());
@@ -175,9 +172,13 @@ fn spawn_main_buttons(
                     parent
                         .spawn(button)
                         .insert(Selected)
-                        .insert(EditorButton { index: i });
+                        .insert(EditorButton { index: i })
+                        .insert(ApplyDefaultColoring);
                 } else {
-                    parent.spawn(button).insert(EditorButton { index: i });
+                    parent
+                        .spawn(button)
+                        .insert(EditorButton { index: i })
+                        .insert(ApplyDefaultColoring);
                 }
             }
         });
@@ -208,58 +209,61 @@ fn spawn_main_buttons(
     }
 }
 
-///Handles interactions with the [TutorialButton].
-/// # Arguments
-/// * `commands` - [Commands].
-/// * `loadtimer` - [Query] for [LoadTimer].
-/// * `tutorial_interaction` - [Query] for [TutorialButton] and its [Interaction] when changed.
-/// * `state` - Resource containing [State]. This game's states are defined in the [GameState] enum.
-fn unselected_button_interaction(
+fn change_selection(
     mut commands: Commands,
-    mut selected: Query<(&mut BackgroundColor, Entity), (With<Selected>, With<EditorButton>)>,
-    mut non_selected: Query<
-        (&Interaction, &mut BackgroundColor, Entity, &EditorButton),
+    non_selected: Query<
+        (&Interaction, Entity),
+        (
+            Changed<Interaction>,
+            With<ApplyDefaultColoring>,
+            Without<Selected>,
+        ),
+    >,
+    selected: Query<Entity, (With<ApplyDefaultColoring>, With<Selected>)>,
+) {
+    for (interaction, entity) in non_selected.iter() {
+        match *interaction {
+            Interaction::Pressed => {
+                for selected_button in selected.iter() {
+                    commands.entity(selected_button).remove::<Selected>();
+                }
+
+                commands.entity(entity).insert(Selected);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn select_item(
+    non_selected: Query<
+        (&Interaction, &EditorButton),
         (Changed<Interaction>, With<EditorButton>, Without<Selected>),
     >,
     mut editor_tool_query: Query<&mut TextureAtlasSprite, With<EditorTool>>,
     mut next: ResMut<NextState<GameState>>,
     state: Res<State<GameState>>,
 ) {
-    let idle_color = Color::NONE.into();
-    for (interaction, mut color, entity, button_index) in &mut non_selected {
+    for (interaction, button_index) in non_selected.iter() {
         match *interaction {
             Interaction::Pressed => {
                 if state.get() != &GameState::Building {
                     next.set(GameState::Building);
                 }
 
-                for (mut color, selected_button) in &mut selected {
-                    commands.entity(selected_button).remove::<Selected>();
-                    *color = idle_color;
-                }
-
-                commands.entity(entity).insert(Selected);
-
-                *color = Color::rgba(0., 0., 0., 0.6).into();
-
                 for mut sprite in editor_tool_query.iter_mut() {
                     sprite.index = button_index.index;
                 }
             }
-            Interaction::Hovered => {
-                *color = Color::rgba(0., 0., 0., 0.4).into();
-            }
-            Interaction::None => {
-                *color = idle_color;
-            }
+            _ => {}
         }
     }
 }
 
-fn selected_button_interaction(
+fn selected_button_coloring(
     mut previously_selected: Query<
         (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<EditorButton>, With<Selected>),
+        (With<ApplyDefaultColoring>, With<Selected>),
     >,
 ) {
     for (interaction, mut color) in &mut previously_selected {
@@ -272,6 +276,27 @@ fn selected_button_interaction(
             }
             Interaction::None => {
                 *color = Color::rgba(1., 0.8, 0.9, 0.6).into();
+            }
+        }
+    }
+}
+
+fn unselected_button_coloring(
+    mut previously_selected: Query<
+        (&Interaction, &mut BackgroundColor),
+        (With<ApplyDefaultColoring>, Without<Selected>),
+    >,
+) {
+    for (interaction, mut color) in &mut previously_selected {
+        match *interaction {
+            Interaction::Pressed => {
+                *color = Color::rgba(0., 0., 0., 0.6).into();
+            }
+            Interaction::Hovered => {
+                *color = Color::rgba(0., 0., 0., 0.4).into();
+            }
+            Interaction::None => {
+                *color = Color::NONE.into();
             }
         }
     }
