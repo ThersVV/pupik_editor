@@ -12,7 +12,17 @@ pub struct EditorTool {
 }
 
 #[derive(Component)]
+pub struct LocalZ {
+    z: i32,
+}
+
+#[derive(Component)]
 pub struct BuiltItem;
+
+#[derive(Component)]
+pub struct BuiltButton {
+    id: Entity,
+}
 
 #[derive(Component)]
 struct Selected;
@@ -28,10 +38,9 @@ impl Plugin for MousePlugin {
             )
             .add_systems(
                 Update,
-                (nothing).run_if(in_state(GameState::Erasing)),
+                (erase_item).run_if(in_state(GameState::Erasing)),
                 //TODO: hodně věcí brácho, ale ty to dáš. Pro Aničku <3.
-                // Zbarvování buttonů lepší by to chtělo ...  A pak jsou na čase kolize. Asi kašli na ray casting,
-                // i když to zní cool af.
+                // A pak jsou na čase kolize. Asi kašli na ray casting, i když to zní cool af.
                 // Stačí přes souřadnice. Pak teda to mazání. Pak už možná sloupečky a export?
                 //Případně funkce, co ještě půjdou udělat, jsou ctrlZ, lepší ukazování letadel,
                 //deselektování nefunguje
@@ -80,8 +89,90 @@ fn spawn_selected_item(
     mut editor_tool_q: Query<(&TextureAtlasSprite, &Transform, &mut EditorTool), With<EditorTool>>,
     buttons: Res<Input<MouseButton>>,
     ui_q: Query<(&Transform, &UISprite), With<UISprite>>,
+    windows_q: Query<&Window, With<PrimaryWindow>>,
 ) {
     for (sprite, trans, mut tool) in editor_tool_q.iter_mut() {
+        if !buttons.pressed(MouseButton::Left) {
+            tool.is_left_clicked = false;
+            return;
+        }
+        let editor_is_on_ui = overlaps_ui(trans, &ui_q);
+        if tool.is_left_clicked || editor_is_on_ui {
+            return;
+        }
+
+        let mut new_trans = trans.clone();
+        new_trans.translation.z = trans.translation.z - (random::<f32>() * 100.) + 1.;
+
+        let item = commands
+            .spawn(SpriteSheetBundle {
+                sprite: sprite.clone(),
+                texture_atlas: texture_atlas.0.clone(),
+                transform: new_trans,
+                ..Default::default()
+            })
+            .insert(BuiltItem)
+            .id();
+
+        let window = windows_q.single();
+        if let Some(position) = window.cursor_position() {
+            let z = random::<i32>();
+            let button = commands
+                .spawn(ButtonBundle {
+                    style: Style {
+                        width: Val::Px(30.),
+                        height: Val::Px(22.),
+                        left: Val::Px(position.x - 15.),
+                        top: Val::Px(position.y - 11.),
+                        border: UiRect::all(Val::Px(1.)),
+                        position_type: PositionType::Absolute,
+                        ..Default::default()
+                    },
+                    z_index: ZIndex::Global(z),
+                    border_color: Color::BLACK.into(),
+                    ..Default::default()
+                })
+                .insert(LocalZ { z: z })
+                .insert(BuiltButton { id: item })
+                .id();
+            commands.entity(button);
+        }
+
+        commands.entity(item);
+
+        tool.is_left_clicked = true;
+    }
+}
+
+fn erase_item(
+    mut commands: Commands,
+    button_q: Query<
+        (&Interaction, Entity, &BuiltButton, &LocalZ),
+        (Changed<Interaction>, With<BuiltButton>),
+    >,
+) {
+    let mut max_z = i32::MIN;
+    let mut max_z_entity = None;
+    let mut max_z_sprite = None;
+    for (interaction, entity, button, z) in button_q.iter() {
+        match *interaction {
+            Interaction::Pressed => {
+                if z.z > max_z {
+                    max_z = z.z;
+                    max_z_entity = Some(entity);
+                    max_z_sprite = Some(button.id);
+                }
+            }
+            _ => {}
+        }
+    }
+    if let Some(e) = max_z_entity {
+        commands.entity(e).despawn();
+        commands.entity(max_z_sprite.unwrap()).despawn();
+    }
+    /* let mut max_z = -1;
+    let meantItem =
+    for (sprite, trans, mut tool) in spawned_item_q.iter_mut() {
         if !buttons.pressed(MouseButton::Left) {
             tool.is_left_clicked = false;
             return;
@@ -105,7 +196,5 @@ fn spawn_selected_item(
         commands.entity(item);
 
         tool.is_left_clicked = true;
-    }
+    } */
 }
-
-fn nothing(cm: Commands) {}

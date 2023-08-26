@@ -107,7 +107,6 @@ fn spawn_eraser(
     let texture = assets.get(&sheet.0).unwrap();
     let sprite_width = texture.size.x / texture.textures.len() as f32;
     let sprite_height = texture.size.y;
-
     commands
         .spawn(SpriteSheetBundle {
             sprite: TextureAtlasSprite::new(0),
