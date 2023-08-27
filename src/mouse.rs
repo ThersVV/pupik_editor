@@ -17,6 +17,11 @@ pub struct LocalZ {
 }
 
 #[derive(Component)]
+pub struct ItemName {
+    pub name: &'static str,
+}
+
+#[derive(Component)]
 pub struct BuiltItem;
 
 #[derive(Component)]
@@ -34,16 +39,15 @@ impl Plugin for MousePlugin {
         app.add_systems(Startup, spawn_editor_tool)
             .add_systems(
                 Update,
-                (spawn_selected_item).run_if(in_state(GameState::Building)),
+                spawn_selected_item.run_if(in_state(GameState::Building)),
             )
             .add_systems(
                 Update,
-                (erase_item).run_if(in_state(GameState::Erasing)),
-                //TODO: hodně věcí brácho, ale ty to dáš. Pro Aničku <3.
-                // Pak už možná sloupečky a export?
-                //Případně funkce, co ještě půjdou udělat, jsou ctrlZ, lepší ukazování letadel
+                erase_item.run_if(in_state(GameState::Erasing)),
+                //TODO:
+                //Případně funkce, co ještě půjdou udělat, jsou ctrlZ, lepší ukazování letadel, scaling
             )
-            .add_systems(Update, (movement));
+            .add_systems(Update, movement);
     }
 }
 
@@ -101,7 +105,16 @@ fn spawn_selected_item(
 
         let mut new_trans = trans.clone();
         new_trans.translation.z = trans.translation.z - (random::<f32>() * 100.) + 1.;
-
+        let name;
+        match sprite.index {
+            0 => name = "blackhole",
+            1 => name = "rainbow",
+            2 => name = "energybar",
+            3 => name = "regular",
+            4 => name = "plane",
+            5 => name = "planet",
+            _ => name = "",
+        }
         let item = commands
             .spawn(SpriteSheetBundle {
                 sprite: sprite.clone(),
@@ -110,6 +123,7 @@ fn spawn_selected_item(
                 ..Default::default()
             })
             .insert(BuiltItem)
+            .insert(ItemName { name })
             .id();
 
         let window = windows_q.single();

@@ -1,4 +1,8 @@
-use crate::{mouse::EditorTool, CombinedSheet, EraserSheet, GameState, PrimaryWindow};
+use crate::{
+    export::{spawn_export_button, SingleUse},
+    mouse::EditorTool,
+    CombinedSheet, EraserSheet, GameState, PrimaryWindow,
+};
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
 
@@ -8,17 +12,17 @@ struct EditorButton {
 }
 
 #[derive(Component)]
-struct EraserButton;
+pub struct EraserButton;
 
 #[derive(Component)]
 struct Selected;
 
 #[derive(Component)]
-struct ApplyDefaultColoring;
+pub struct ApplyDefaultColoring;
 
 #[derive(Component)]
 pub struct UISprite {
-    sprite_size: Vec2,
+    pub sprite_size: Vec2,
 }
 
 pub struct StructureUIPlugin;
@@ -75,7 +79,7 @@ pub fn overlaps_ui(
     return false;
 }
 
-fn spawn_eraser(
+pub fn spawn_eraser(
     mut commands: Commands,
     sheet: Res<EraserSheet>,
     q_windows: Query<&Window, With<PrimaryWindow>>,
@@ -105,7 +109,7 @@ fn spawn_eraser(
     let scale = 80. / 256.;
 
     let texture = assets.get(&sheet.0).unwrap();
-    let sprite_width = texture.size.x / texture.textures.len() as f32;
+    let sprite_width = texture.size.x / texture.len() as f32;
     let sprite_height = texture.size.y;
     commands
         .spawn(SpriteSheetBundle {
@@ -183,7 +187,7 @@ fn spawn_main_buttons(
         });
 
     let texture = assets.get(&sheet.0).unwrap();
-    let sprite_width = texture.size.x / texture.textures.len() as f32;
+    let sprite_width = texture.size.x / texture.len() as f32;
     let sprite_height = texture.size.y;
     for i in 0..6 {
         commands
@@ -219,6 +223,7 @@ fn change_selection(
             Changed<Interaction>,
             With<ApplyDefaultColoring>,
             Without<Selected>,
+            Without<SingleUse>,
         ),
     >,
     selected: Query<Entity, (With<ApplyDefaultColoring>, With<Selected>)>,
@@ -263,12 +268,12 @@ fn select_item(
 }
 
 fn selected_button_coloring(
-    mut previously_selected: Query<
+    mut selected: Query<
         (&Interaction, &mut BackgroundColor),
         (With<ApplyDefaultColoring>, With<Selected>),
     >,
 ) {
-    for (interaction, mut color) in &mut previously_selected {
+    for (interaction, mut color) in &mut selected {
         match *interaction {
             Interaction::Pressed => {
                 *color = Color::rgba(1., 0.8, 0.9, 0.9).into();
@@ -284,15 +289,15 @@ fn selected_button_coloring(
 }
 
 fn unselected_button_coloring(
-    mut previously_selected: Query<
+    mut unselected: Query<
         (&Interaction, &mut BackgroundColor),
         (With<ApplyDefaultColoring>, Without<Selected>),
     >,
 ) {
-    for (interaction, mut color) in &mut previously_selected {
+    for (interaction, mut color) in &mut unselected {
         match *interaction {
             Interaction::Pressed => {
-                *color = Color::rgba(0., 0., 0., 0.6).into();
+                *color = Color::rgba(0., 0., 0., 0.75).into();
             }
             Interaction::Hovered => {
                 *color = Color::rgba(0., 0., 0., 0.4).into();
@@ -304,13 +309,8 @@ fn unselected_button_coloring(
     }
 }
 
-fn vertical_bars(
-    mut commands: Commands,
-    q_windows: Query<&Window, With<PrimaryWindow>>,
-    assets: Res<Assets<TextureAtlas>>,
-) {
-    let window = q_windows.single();
-    let (w_width, w_height) = (window.width(), window.height());
+fn vertical_bars(mut commands: Commands, q_windows: Query<&Window, With<PrimaryWindow>>) {
+    let w_width = q_windows.single().width();
     commands.spawn(NodeBundle {
         style: Style {
             width: Val::Px((w_width - (1920. / 3.)) / 2.),

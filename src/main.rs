@@ -19,6 +19,14 @@ pub enum GameState {
     Erasing,
 }
 
+///[Handle] for an export [TextureAtlas].
+#[derive(Resource)]
+pub struct ExportSheet(pub Handle<TextureAtlas>);
+
+///[Handle] for an empty [TextureAtlas].
+#[derive(Resource)]
+pub struct EmptySheet(pub Handle<TextureAtlas>);
+
 ///[Handle] for eraser [TextureAtlas].
 #[derive(Resource)]
 pub struct EraserSheet(pub Handle<TextureAtlas>);
@@ -70,15 +78,10 @@ pub struct LoveSheet(pub Handle<TextureAtlas>);
 #[derive(Resource)]
 pub struct KofolaSheet(pub Handle<TextureAtlas>);
 
-#[derive(Resource)]
-pub struct ImagePaths {
-    vec: Vec<String>,
-}
-
-mod cursor;
+mod export;
 mod mouse;
 mod structure_ui;
-use cursor::CursorPlugin;
+use export::ExportPlugin;
 use mouse::MousePlugin;
 use structure_ui::StructureUIPlugin;
 
@@ -106,7 +109,7 @@ fn main() {
             RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0),
             MouseMotionPlugin,
         ))
-        .add_plugins((StructureUIPlugin, MousePlugin, CursorPlugin))
+        .add_plugins((StructureUIPlugin, MousePlugin, ExportPlugin))
         //.add_plugin(RapierDebugRenderPlugin::default())
         .insert_resource(RapierConfiguration {
             gravity: Vec2::splat(0.),
@@ -173,6 +176,8 @@ fn load_all(
         ),
         SheetInfo::new("combined_sheet.png", 2254. / 7., 223., 7, 1, None, None),
         SheetInfo::new("eraser.png", 256., 256., 1, 1, None, None),
+        SheetInfo::new("empty_sprite.png", 1., 1., 1, 1, None, None),
+        SheetInfo::new("export.png", 218., 218., 1, 1, None, None),
     ];
     for sheet in init_arr {
         let image = assets.load(sheet.name);
@@ -203,21 +208,13 @@ fn load_all(
             "kofolasheet.png" => commands.insert_resource(KofolaSheet(atlas_handle)),
             "combined_sheet.png" => commands.insert_resource(CombinedSheet(atlas_handle)),
             "eraser.png" => commands.insert_resource(EraserSheet(atlas_handle)),
+            "empty_sprite.png" => commands.insert_resource(EmptySheet(atlas_handle)),
+            "export.png" => commands.insert_resource(ExportSheet(atlas_handle)),
             _ => {
                 panic!("=============FILE NAME MISSING IN MAIN.RS MATCH EXPRESSION!=============");
             }
         };
     }
-    commands.insert_resource(ImagePaths {
-        vec: Vec::from([
-            "blackhole_sheet.png".into(),
-            "duha.png".into(),
-            "energy_sheet.png".into(),
-            "lovesheet.png".into(),
-            "plane_sheet1.png".into(),
-            "planet_sheet.png".into(),
-        ]),
-    })
 }
 
 /// Spawns the camera.
