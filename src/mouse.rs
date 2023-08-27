@@ -40,10 +40,8 @@ impl Plugin for MousePlugin {
                 Update,
                 (erase_item).run_if(in_state(GameState::Erasing)),
                 //TODO: hodně věcí brácho, ale ty to dáš. Pro Aničku <3.
-                // A pak jsou na čase kolize. Asi kašli na ray casting, i když to zní cool af.
-                // Stačí přes souřadnice. Pak teda to mazání. Pak už možná sloupečky a export?
-                //Případně funkce, co ještě půjdou udělat, jsou ctrlZ, lepší ukazování letadel,
-                //deselektování nefunguje
+                // Pak už možná sloupečky a export?
+                //Případně funkce, co ještě půjdou udělat, jsou ctrlZ, lepší ukazování letadel
             )
             .add_systems(Update, (movement));
     }
@@ -116,7 +114,7 @@ fn spawn_selected_item(
 
         let window = windows_q.single();
         if let Some(position) = window.cursor_position() {
-            let z = random::<i32>();
+            let z = i32::abs(random::<i32>()) * -1 - 1;
             let button = commands
                 .spawn(ButtonBundle {
                     style: Style {
@@ -170,31 +168,4 @@ fn erase_item(
         commands.entity(e).despawn();
         commands.entity(max_z_sprite.unwrap()).despawn();
     }
-    /* let mut max_z = -1;
-    let meantItem =
-    for (sprite, trans, mut tool) in spawned_item_q.iter_mut() {
-        if !buttons.pressed(MouseButton::Left) {
-            tool.is_left_clicked = false;
-            return;
-        }
-        let editor_is_on_ui = overlaps_ui(trans, &ui_q);
-        if tool.is_left_clicked || editor_is_on_ui {
-            return;
-        }
-        let mut new_trans = trans.clone();
-        new_trans.translation.z = trans.translation.z - (random::<f32>() * 100.) + 1.;
-
-        let item = commands
-            .spawn(SpriteSheetBundle {
-                sprite: sprite.clone(),
-                texture_atlas: texture_atlas.0.clone(),
-                transform: new_trans,
-                ..Default::default()
-            })
-            .insert(BuiltItem)
-            .id();
-        commands.entity(item);
-
-        tool.is_left_clicked = true;
-    } */
 }
