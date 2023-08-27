@@ -33,6 +33,7 @@ impl Plugin for StructureUIPlugin {
             .add_systems(
                 Update,
                 (
+                    update_freshly_unselected,
                     unselected_button_coloring,
                     selected_button_coloring,
                     eraser_button_interaction,
@@ -270,7 +271,11 @@ fn select_item(
 fn selected_button_coloring(
     mut selected: Query<
         (&Interaction, &mut BackgroundColor),
-        (With<ApplyDefaultColoring>, With<Selected>),
+        (
+            With<ApplyDefaultColoring>,
+            Changed<Interaction>,
+            With<Selected>,
+        ),
     >,
 ) {
     for (interaction, mut color) in &mut selected {
@@ -291,7 +296,11 @@ fn selected_button_coloring(
 fn unselected_button_coloring(
     mut unselected: Query<
         (&Interaction, &mut BackgroundColor),
-        (With<ApplyDefaultColoring>, Without<Selected>),
+        (
+            With<ApplyDefaultColoring>,
+            Changed<Interaction>,
+            Without<Selected>,
+        ),
     >,
 ) {
     for (interaction, mut color) in &mut unselected {
@@ -304,6 +313,30 @@ fn unselected_button_coloring(
             }
             Interaction::None => {
                 *color = Color::NONE.into();
+            }
+        }
+    }
+}
+
+fn update_freshly_unselected(
+    mut unselected: RemovedComponents<Selected>,
+    mut unselected_q: Query<
+        (&Interaction, &mut BackgroundColor),
+        (With<ApplyDefaultColoring>, Without<Selected>),
+    >,
+) {
+    for entity in unselected.iter() {
+        if let Ok((interaction, mut color)) = unselected_q.get_mut(entity) {
+            match *interaction {
+                Interaction::Pressed => {
+                    *color = Color::rgba(0., 0., 0., 0.75).into();
+                }
+                Interaction::Hovered => {
+                    *color = Color::rgba(0., 0., 0., 0.4).into();
+                }
+                Interaction::None => {
+                    *color = Color::NONE.into();
+                }
             }
         }
     }
