@@ -25,7 +25,7 @@ pub struct StructureUIPlugin;
 
 impl Plugin for StructureUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (spawn_main_buttons, spawn_eraser))
+        app.add_systems(Startup, (spawn_main_buttons, spawn_eraser, vertical_bars))
             .add_systems(
                 Update,
                 (
@@ -89,7 +89,7 @@ fn spawn_eraser(
                 height: Val::Px(80.),
                 right: Val::Percent(3.),
                 top: Val::Percent(3.),
-                border: UiRect::all(Val::Px(3.)),
+                border: UiRect::all(Val::Px(1.)),
                 ..default()
             },
             //image: assets.load("eraser.png").into(),
@@ -302,4 +302,48 @@ fn unselected_button_coloring(
             }
         }
     }
+}
+
+fn vertical_bars(
+    mut commands: Commands,
+    q_windows: Query<&Window, With<PrimaryWindow>>,
+    assets: Res<Assets<TextureAtlas>>,
+) {
+    let window = q_windows.single();
+    let (w_width, w_height) = (window.width(), window.height());
+    commands.spawn(NodeBundle {
+        style: Style {
+            width: Val::Px((w_width - (1920. / 3.)) / 2.),
+            height: Val::Percent(85.),
+            left: Val::Percent(0.),
+            position_type: PositionType::Absolute,
+            top: Val::Percent(0.),
+            border: UiRect {
+                right: Val::Px(1.),
+                ..Default::default()
+            },
+            ..default()
+        },
+        background_color: Color::rgba(0., 0., 0., 0.3).into(), //pink
+        border_color: Color::rgba(0., 0., 0., 0.8).into(),
+        ..default()
+    });
+
+    commands.spawn(NodeBundle {
+        style: Style {
+            width: Val::Px((w_width - (1920. / 3.)) / 2.),
+            height: Val::Percent(85.),
+            right: Val::Percent(0.),
+            top: Val::Percent(0.),
+            position_type: PositionType::Absolute,
+            border: UiRect {
+                left: Val::Px(1.),
+                ..Default::default()
+            },
+            ..default()
+        },
+        background_color: Color::rgba(0., 0., 0., 0.3).into(), //pink
+        border_color: Color::rgba(0., 0., 0., 0.8).into(),
+        ..default()
+    });
 }
