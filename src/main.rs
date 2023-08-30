@@ -3,6 +3,7 @@
 use bevy::prelude::*;
 use bevy::window::*;
 use bevy::winit::WinitWindows;
+use bevy_egui::*;
 use bevy_mouse_tracking_plugin::{
     mouse_motion::MouseMotionPlugin, mouse_pos::InitMouseTracking, MainCamera,
 };
@@ -22,6 +23,10 @@ pub enum GameState {
 ///[Handle] for an export [TextureAtlas].
 #[derive(Resource)]
 pub struct ExportSheet(pub Handle<TextureAtlas>);
+
+///[Handle] for an empty [TextureAtlas].
+#[derive(Resource)]
+pub struct WhiteSheet(pub Handle<TextureAtlas>);
 
 ///[Handle] for an empty [TextureAtlas].
 #[derive(Resource)]
@@ -78,6 +83,13 @@ pub struct LoveSheet(pub Handle<TextureAtlas>);
 #[derive(Resource)]
 pub struct KofolaSheet(pub Handle<TextureAtlas>);
 
+#[derive(Default, Resource)]
+struct UiState {
+    name: String,
+    weight_s: String,
+    ready_to_export: bool,
+}
+
 mod export;
 mod mouse;
 mod structure_ui;
@@ -89,6 +101,7 @@ fn main() {
     App::new()
         .insert_resource(ClearColor(CLEAR))
         .add_state::<GameState>()
+        .init_resource::<UiState>()
         .add_plugins(
             DefaultPlugins
                 .set(ImagePlugin::default_linear())
@@ -107,7 +120,7 @@ fn main() {
         .add_systems(PreStartup, load_all)
         .add_plugins((
             RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0),
-            MouseMotionPlugin,
+            MouseMotionPlugin,EguiPlugin
         ))
         .add_plugins((StructureUIPlugin, MousePlugin, ExportPlugin))
         //.add_plugin(RapierDebugRenderPlugin::default())
@@ -177,6 +190,7 @@ fn load_all(
         SheetInfo::new("combined_sheet.png", 2254. / 7., 223., 7, 1, None, None),
         SheetInfo::new("eraser.png", 256., 256., 1, 1, None, None),
         SheetInfo::new("empty_sprite.png", 1., 1., 1, 1, None, None),
+        SheetInfo::new("white_transparent.png", 1., 1., 1, 1, None, None),
         SheetInfo::new("export.png", 218., 218., 1, 1, None, None),
     ];
     for sheet in init_arr {
@@ -209,6 +223,7 @@ fn load_all(
             "combined_sheet.png" => commands.insert_resource(CombinedSheet(atlas_handle)),
             "eraser.png" => commands.insert_resource(EraserSheet(atlas_handle)),
             "empty_sprite.png" => commands.insert_resource(EmptySheet(atlas_handle)),
+            "white_transparent.png" => commands.insert_resource(WhiteSheet(atlas_handle)),
             "export.png" => commands.insert_resource(ExportSheet(atlas_handle)),
             _ => {
                 panic!("=============FILE NAME MISSING IN MAIN.RS MATCH EXPRESSION!=============");
@@ -242,7 +257,6 @@ fn spawn_camera(mut commands: Commands) {
     commands
         .spawn(camera)
         .add(InitMouseTracking)
-        //.add(InitWorldTracking)
         .insert(MainCamera);
 }
 
