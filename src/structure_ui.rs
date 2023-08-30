@@ -1,7 +1,5 @@
 use crate::{
-    export::{spawn_export_button, SingleUse},
-    mouse::EditorTool,
-    CombinedSheet, EraserSheet, GameState, PrimaryWindow,
+    export::SingleUse, mouse::EditorTool, CombinedSheet, EraserSheet, GameState, PrimaryWindow,
 };
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
