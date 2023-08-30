@@ -20,6 +20,10 @@ pub enum GameState {
     Erasing,
 }
 
+///[Handle] for an exit cross [TextureAtlas].
+#[derive(Resource)]
+pub struct ExitSheet(pub Handle<TextureAtlas>);
+
 ///[Handle] for an export [TextureAtlas].
 #[derive(Resource)]
 pub struct ExportSheet(pub Handle<TextureAtlas>);
@@ -109,8 +113,9 @@ fn main() {
                     primary_window: Some(Window {
                         title: "pupik".to_string(),
                         present_mode: PresentMode::Fifo,
-                        position: WindowPosition::At(IVec2::new(100, 0)),/* 
-                        mode: WindowMode::Fullscreen, */
+                        position: WindowPosition::At(IVec2::new(100, 50)),
+                        decorations: false,
+                        resizable: false,
                         ..Default::default()
                     }),
                     ..Default::default()
@@ -120,10 +125,10 @@ fn main() {
         .add_systems(PreStartup, load_all)
         .add_plugins((
             RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0),
-            MouseMotionPlugin,EguiPlugin
+            MouseMotionPlugin,
+            EguiPlugin,
         ))
         .add_plugins((StructureUIPlugin, MousePlugin, ExportPlugin))
-        //.add_plugin(RapierDebugRenderPlugin::default())
         .insert_resource(RapierConfiguration {
             gravity: Vec2::splat(0.),
             ..Default::default()
@@ -192,6 +197,7 @@ fn load_all(
         SheetInfo::new("empty_sprite.png", 1., 1., 1, 1, None, None),
         SheetInfo::new("white_transparent.png", 1., 1., 1, 1, None, None),
         SheetInfo::new("export.png", 218., 218., 1, 1, None, None),
+        SheetInfo::new("exit.png", 225., 225., 1, 1, None, None),
     ];
     for sheet in init_arr {
         let image = assets.load(sheet.name);
@@ -225,6 +231,7 @@ fn load_all(
             "empty_sprite.png" => commands.insert_resource(EmptySheet(atlas_handle)),
             "white_transparent.png" => commands.insert_resource(WhiteSheet(atlas_handle)),
             "export.png" => commands.insert_resource(ExportSheet(atlas_handle)),
+            "exit.png" => commands.insert_resource(ExitSheet(atlas_handle)),
             _ => {
                 panic!("=============FILE NAME MISSING IN MAIN.RS MATCH EXPRESSION!=============");
             }

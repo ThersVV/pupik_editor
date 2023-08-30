@@ -1,6 +1,8 @@
 use crate::{
-    export::SingleUse, mouse::EditorTool, CombinedSheet, EraserSheet, GameState, PrimaryWindow,
+    export::SingleUse, mouse::EditorTool, CombinedSheet, EraserSheet, ExitSheet, GameState,
+    PrimaryWindow,
 };
+use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy::sprite::collide_aabb::collide;
 
@@ -11,6 +13,9 @@ struct EditorButton {
 
 #[derive(Component)]
 pub struct EraserButton;
+
+#[derive(Component)]
+pub struct ExitButton;
 
 #[derive(Component)]
 struct Selected;
@@ -27,19 +32,86 @@ pub struct StructureUIPlugin;
 
 impl Plugin for StructureUIPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, (spawn_main_buttons, spawn_eraser, vertical_bars))
-            .add_systems(
-                Update,
-                (
-                    update_freshly_unselected,
-                    unselected_button_coloring,
-                    selected_button_coloring,
-                    eraser_button_interaction,
-                    change_selection,
-                    select_item,
-                ),
-            );
+        app.add_systems(
+            Startup,
+            (spawn_main_buttons, spawn_eraser, vertical_bars, spawn_exit),
+        )
+        .add_systems(
+            Update,
+            (
+                update_freshly_unselected,
+                unselected_button_coloring,
+                selected_button_coloring,
+                eraser_button_interaction,
+                change_selection,
+                select_item,
+                exit_button_interaction,
+            ),
+        );
     }
+}
+
+fn exit_button_interaction(
+    eraser_button_q: Query<&Interaction, (Changed<Interaction>, With<ExitButton>)>,
+    mut exit: EventWriter<AppExit>,
+) {
+    for interaction in eraser_button_q.iter() {
+        match *interaction {
+            Interaction::Pressed => {
+                exit.send(AppExit);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn spawn_exit(
+    mut commands: Commands,
+    sheet: Res<ExitSheet>,
+    q_windows: Query<&Window, With<PrimaryWindow>>,
+    assets: Res<Assets<TextureAtlas>>,
+) {
+    commands
+        .spawn(ButtonBundle {
+            style: Style {
+                position_type: PositionType::Absolute,
+                width: Val::Px(80.),
+                height: Val::Px(80.),
+                left: Val::Percent(3.),
+                top: Val::Percent(3.),
+                border: UiRect::all(Val::Px(1.)),
+                ..default()
+            },
+            //image: assets.load("eraser.png").into(),
+            border_color: Color::rgba(0., 0., 0., 1.0).into(),
+            background_color: Color::NONE.into(),
+            ..default()
+        })
+        .insert(ExitButton)
+        .insert(SingleUse)
+        .insert(ApplyDefaultColoring);
+
+    let window = q_windows.single();
+    let (w_width, w_height) = (window.width(), window.height());
+
+    let texture = assets.get(&sheet.0).unwrap();
+    let sprite_width = texture.size.x / texture.len() as f32;
+    let sprite_height = texture.size.y;
+    let scale = 80. / sprite_width;
+    commands
+        .spawn(SpriteSheetBundle {
+            sprite: TextureAtlasSprite::new(0),
+            texture_atlas: sheet.0.clone(),
+            transform: Transform {
+                translation: Vec3::new(w_width * -0.47 + 40., w_height * 0.47 - 40., 900.),
+                scale: Vec3::splat(scale),
+                ..Default::default()
+            },
+            ..Default::default()
+        })
+        .insert(UISprite {
+            sprite_size: Vec2::new(sprite_width * scale, sprite_height * scale),
+        });
 }
 
 fn eraser_button_interaction(
@@ -105,11 +177,11 @@ pub fn spawn_eraser(
 
     let window = q_windows.single();
     let (w_width, w_height) = (window.width(), window.height());
-    let scale = 80. / 256.;
 
     let texture = assets.get(&sheet.0).unwrap();
     let sprite_width = texture.size.x / texture.len() as f32;
     let sprite_height = texture.size.y;
+    let scale = 80. / sprite_width;
     commands
         .spawn(SpriteSheetBundle {
             sprite: TextureAtlasSprite::new(0),
