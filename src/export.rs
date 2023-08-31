@@ -22,9 +22,7 @@ impl Plugin for ExportPlugin {
         app.add_systems(PostStartup, spawn_export_button)
             .add_systems(Update, export_button_interaction)
             .add_systems(Startup, user_input_background)
-            .add_systems(Update, user_input)
-            /* .add_startup_system(configure_visuals_system) */;
-        //.add_startup_system(configure_ui_state_system);
+            .add_systems(Update, user_input);
     }
 }
 
@@ -33,7 +31,6 @@ fn export(item_query: &Query<(&Transform, &ItemName), With<BuiltItem>>, ui_state
         return;
     };
     if !ui_state.ready_to_export {
-        println!("testing");
         return;
     };
     let export_path = "./structures/".to_owned() + if ui_state.name == "" {"export"} else {&ui_state.name};
@@ -71,7 +68,6 @@ pub fn spawn_export_button(
                 border: UiRect::all(Val::Px(1.)),
                 ..default()
             },
-            //image: assets.load("eraser.png").into(),
             border_color: Color::rgba(0., 0., 0., 1.0).into(),
             background_color: Color::NONE.into(),
             ..default()

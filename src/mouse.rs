@@ -41,12 +41,7 @@ impl Plugin for MousePlugin {
                 Update,
                 spawn_selected_item.run_if(in_state(GameState::Building)),
             )
-            .add_systems(
-                Update,
-                erase_item.run_if(in_state(GameState::Erasing)),
-                //TODO:
-                //Případně funkce, co ještě půjdou udělat, jsou ctrlZ, lepší ukazování letadel, scaling
-            )
+            .add_systems(Update, erase_item.run_if(in_state(GameState::Erasing)))
             .add_systems(Update, movement);
     }
 }

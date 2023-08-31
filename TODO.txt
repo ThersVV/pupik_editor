@@ -1,0 +1,15 @@
+CODE
+
+Concrete basic sprite selection.
+Fullscreen support.
+Better airplanes.
+
+GAME
+
+Ctrl + Z.
+Add a tinkering music, maybe even sound efects.
+Different colored buttons for each object.
+Importing a structure and editing it.
+Scrolling.
+Custom scale.
+Guiding lines.

@@ -4,10 +4,6 @@ use bevy::prelude::*;
 use bevy::window::*;
 use bevy::winit::WinitWindows;
 use bevy_egui::*;
-use bevy_mouse_tracking_plugin::{
-    mouse_motion::MouseMotionPlugin, mouse_pos::InitMouseTracking, MainCamera,
-};
-use bevy_rapier2d::prelude::*;
 use winit::window::Icon;
 
 pub const CLEAR: Color = Color::rgb(0.75, 0.70, 1.);
@@ -20,72 +16,33 @@ pub enum GameState {
     Erasing,
 }
 
-///[Handle] for an exit cross [TextureAtlas].
 #[derive(Resource)]
 pub struct ExitSheet(pub Handle<TextureAtlas>);
 
-///[Handle] for an export [TextureAtlas].
 #[derive(Resource)]
 pub struct ExportSheet(pub Handle<TextureAtlas>);
 
-///[Handle] for an empty [TextureAtlas].
 #[derive(Resource)]
 pub struct WhiteSheet(pub Handle<TextureAtlas>);
 
-///[Handle] for an empty [TextureAtlas].
-#[derive(Resource)]
-pub struct EmptySheet(pub Handle<TextureAtlas>);
-
-///[Handle] for eraser [TextureAtlas].
 #[derive(Resource)]
 pub struct EraserSheet(pub Handle<TextureAtlas>);
 
-///[Handle] for combined [TextureAtlas].
 #[derive(Resource)]
 pub struct CombinedSheet(pub Handle<TextureAtlas>);
 
-///[Handle] for unicorn [TextureAtlas].
-#[derive(Resource)]
-pub struct UnicornSheet(pub Handle<TextureAtlas>);
-///[Handle] for black hole [TextureAtlas].
 #[derive(Resource)]
 pub struct HolesSheet(pub Handle<TextureAtlas>);
-///[Handle] for plane [TextureAtlas].
 #[derive(Resource)]
 pub struct PlanesSheet(pub Handle<TextureAtlas>);
-///[Handle] for star [TextureAtlas].
-#[derive(Resource)]
-pub struct StarsSheet(pub Handle<TextureAtlas>);
-///[Handle] for planet [TextureAtlas].
 #[derive(Resource)]
 pub struct PlanetSheet(pub Handle<TextureAtlas>);
-///[Handle] for energybar [TextureAtlas].
 #[derive(Resource)]
 pub struct EnergySheet(pub Handle<TextureAtlas>);
-///[Handle] for rainbow [TextureAtlas].
 #[derive(Resource)]
 pub struct RainbowSheet(pub Handle<TextureAtlas>);
-///[Handle] for cloud [TextureAtlas].
-#[derive(Resource)]
-pub struct CloudSheet(pub Handle<TextureAtlas>);
-///[Handle] for full chocolate bar [TextureAtlas].
-#[derive(Resource)]
-pub struct FullChocSheet(pub Handle<TextureAtlas>);
-///[Handle] for partial chocolate bar [TextureAtlas].
-#[derive(Resource)]
-pub struct PartChocSheet(pub Handle<TextureAtlas>);
-///[Handle] for chocolate egg [TextureAtlas].
-#[derive(Resource)]
-pub struct EggSheet(pub Handle<TextureAtlas>);
-///[Handle] for lollipop [TextureAtlas].
-#[derive(Resource)]
-pub struct LollySheet(pub Handle<TextureAtlas>);
-///[Handle] for round gingerbread [TextureAtlas].
 #[derive(Resource)]
 pub struct LoveSheet(pub Handle<TextureAtlas>);
-///[Handle] for drink [TextureAtlas].
-#[derive(Resource)]
-pub struct KofolaSheet(pub Handle<TextureAtlas>);
 
 #[derive(Default, Resource)]
 struct UiState {
@@ -97,6 +54,7 @@ struct UiState {
 mod export;
 mod mouse;
 mod structure_ui;
+
 use export::ExportPlugin;
 use mouse::MousePlugin;
 use structure_ui::StructureUIPlugin;
@@ -123,24 +81,11 @@ fn main() {
         )
         .add_systems(Startup, (set_window_icon, spawn_camera))
         .add_systems(PreStartup, load_all)
-        .add_plugins((
-            RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0),
-            MouseMotionPlugin,
-            EguiPlugin,
-        ))
+        .add_plugins(EguiPlugin)
         .add_plugins((StructureUIPlugin, MousePlugin, ExportPlugin))
-        .insert_resource(RapierConfiguration {
-            gravity: Vec2::splat(0.),
-            ..Default::default()
-        })
         .run();
 }
 
-///Loads all spritesheets from the assets folder into the [AssetServer]
-/// # Arguments
-/// * `commands` -[Commands].
-/// * `assets` - [AssetServer].
-/// * `texture_atlases` - [Assets] of type [TextureAtlas].
 fn load_all(
     mut commands: Commands,
     assets: Res<AssetServer>,
@@ -183,18 +128,8 @@ fn load_all(
         SheetInfo::new("energy_sheet.png", 243., 117., 1, 1, None, None),
         SheetInfo::new("blackhole_sheet.png", 223., 223., 1, 1, None, None),
         SheetInfo::new("lovesheet.png", 100., 100., 1, 1, None, None),
-        SheetInfo::new(
-            "unicorn_sheet.png",
-            200.,
-            250.,
-            8,
-            1,
-            Some(Vec2::splat(10.0)),
-            Some(Vec2::splat(10.0)),
-        ),
         SheetInfo::new("combined_sheet.png", 2254. / 7., 223., 7, 1, None, None),
         SheetInfo::new("eraser.png", 256., 256., 1, 1, None, None),
-        SheetInfo::new("empty_sprite.png", 1., 1., 1, 1, None, None),
         SheetInfo::new("white_transparent.png", 1., 1., 1, 1, None, None),
         SheetInfo::new("export.png", 218., 218., 1, 1, None, None),
         SheetInfo::new("exit.png", 225., 225., 1, 1, None, None),
@@ -212,23 +147,14 @@ fn load_all(
 
         let atlas_handle = texture_atlases.add(atlas);
         match sheet.name {
-            "mraky_full2.png" => commands.insert_resource(CloudSheet(atlas_handle)),
             "duha.png" => commands.insert_resource(RainbowSheet(atlas_handle)),
-            "star_sheet.png" => commands.insert_resource(StarsSheet(atlas_handle)),
             "plane_sheet1.png" => commands.insert_resource(PlanesSheet(atlas_handle)),
             "energy_sheet.png" => commands.insert_resource(EnergySheet(atlas_handle)),
             "blackhole_sheet.png" => commands.insert_resource(HolesSheet(atlas_handle)),
-            "unicorn_sheet.png" => commands.insert_resource(UnicornSheet(atlas_handle)),
             "planet_sheet.png" => commands.insert_resource(PlanetSheet(atlas_handle)),
-            "full_choc.png" => commands.insert_resource(FullChocSheet(atlas_handle)),
-            "part_choc.png" => commands.insert_resource(PartChocSheet(atlas_handle)),
-            "lollysheet.png" => commands.insert_resource(LollySheet(atlas_handle)),
             "lovesheet.png" => commands.insert_resource(LoveSheet(atlas_handle)),
-            "eggsheet.png" => commands.insert_resource(EggSheet(atlas_handle)),
-            "kofolasheet.png" => commands.insert_resource(KofolaSheet(atlas_handle)),
             "combined_sheet.png" => commands.insert_resource(CombinedSheet(atlas_handle)),
             "eraser.png" => commands.insert_resource(EraserSheet(atlas_handle)),
-            "empty_sprite.png" => commands.insert_resource(EmptySheet(atlas_handle)),
             "white_transparent.png" => commands.insert_resource(WhiteSheet(atlas_handle)),
             "export.png" => commands.insert_resource(ExportSheet(atlas_handle)),
             "exit.png" => commands.insert_resource(ExitSheet(atlas_handle)),
@@ -239,9 +165,6 @@ fn load_all(
     }
 }
 
-/// Spawns the camera.
-/// # Arguments
-/// * `commands` - [Commands]
 fn spawn_camera(mut commands: Commands) {
     let mut camera = Camera2dBundle {
         transform: Transform {
@@ -261,13 +184,9 @@ fn spawn_camera(mut commands: Commands) {
         ..Default::default()
     };
 
-    commands
-        .spawn(camera)
-        .add(InitMouseTracking)
-        .insert(MainCamera);
+    commands.spawn(camera);
 }
 
-/// A cheat to set the window icon.
 fn set_window_icon(
     main_window: Query<Entity, With<PrimaryWindow>>,
     windows: NonSend<WinitWindows>,

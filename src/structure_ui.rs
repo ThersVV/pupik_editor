@@ -82,7 +82,6 @@ fn spawn_exit(
                 border: UiRect::all(Val::Px(1.)),
                 ..default()
             },
-            //image: assets.load("eraser.png").into(),
             border_color: Color::rgba(0., 0., 0., 1.0).into(),
             background_color: Color::NONE.into(),
             ..default()
@@ -167,7 +166,6 @@ pub fn spawn_eraser(
                 border: UiRect::all(Val::Px(1.)),
                 ..default()
             },
-            //image: assets.load("eraser.png").into(),
             border_color: Color::rgba(0., 0., 0., 1.0).into(),
             background_color: Color::NONE.into(),
             ..default()
@@ -198,10 +196,6 @@ pub fn spawn_eraser(
         });
 }
 
-///Spawns clickable background button together with the "How to play" button as its child
-/// # Arguments
-/// * `commands` - [Commands].
-/// * `assets` - [AssetServer]. Used to load font.
 fn spawn_main_buttons(
     mut commands: Commands,
     sheet: Res<CombinedSheet>,
@@ -219,7 +213,7 @@ fn spawn_main_buttons(
                 bottom: Val::Percent(0.),
                 ..default()
             },
-            background_color: Color::rgba(0.0, 0.0, 0.0, 0.2).into(), //pink
+            background_color: Color::rgba(0.0, 0.0, 0.0, 0.2).into(),
             ..default()
         })
         .with_children(|parent| {
@@ -427,7 +421,7 @@ fn vertical_bars(mut commands: Commands, q_windows: Query<&Window, With<PrimaryW
             },
             ..default()
         },
-        background_color: Color::rgba(0., 0., 0., 0.3).into(), //pink
+        background_color: Color::rgba(0., 0., 0., 0.3).into(),
         border_color: Color::rgba(0., 0., 0., 0.8).into(),
         ..default()
     });
@@ -445,7 +439,7 @@ fn vertical_bars(mut commands: Commands, q_windows: Query<&Window, With<PrimaryW
             },
             ..default()
         },
-        background_color: Color::rgba(0., 0., 0., 0.3).into(), //pink
+        background_color: Color::rgba(0., 0., 0., 0.3).into(),
         border_color: Color::rgba(0., 0., 0., 0.8).into(),
         ..default()
     });
