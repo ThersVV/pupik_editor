@@ -34,6 +34,7 @@ fn export(item_query: &Query<(&Transform, &ItemName), With<BuiltItem>>, ui_state
     };
     if !ui_state.ready_to_export {
         println!("testing");
+        println!("testing");
         return;
     };
     let export_path = "./structures/".to_owned() + if ui_state.name == "" {"export"} else {&ui_state.name};
