@@ -1,5 +1,5 @@
-/* #![windows_subsystem = "windows"]
- */
+#![windows_subsystem = "windows"]
+
 use bevy::prelude::*;
 use bevy::window::*;
 use bevy::winit::WinitWindows;
