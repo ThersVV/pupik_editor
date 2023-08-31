@@ -44,7 +44,7 @@ User then can choose any of the default 6 game objects and place them in the mid
 
 If the user wants to delete the object, they can select the eraser tool and then click on the white button that corresponds to the soon to be erased object.
 
-Once the user wants to export the structure, they *must* enter its relative weight, the is no default value for that. The bigger the weight, the more often it will spawn.
+Once the user wants to export the structure, they *must* enter its relative weight, the is no default value for that. The bigger the weight, the more often it will spawn. I couldn't come up with a more straight forward way to do this. Inputing odds of spawning in percentages is impossible, because, simply put, if you keep on making structures with 50% odds of spawning, it can't be 50% for all. I could recalculate them, but then the input value would behave very unpredictably.
 
 Name of the structure is by default "export", but different name can be entered. Then they click the checkmark button and the file appears in a folder named "structures".
 
