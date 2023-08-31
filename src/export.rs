@@ -29,7 +29,7 @@ impl Plugin for ExportPlugin {
 }
 
 fn export(item_query: &Query<(&Transform, &ItemName), With<BuiltItem>>, ui_state: &Res<UiState>) {
-    if let Err(_) = std::fs::create_dir_all("./export") {
+    if let Err(_) = std::fs::create_dir_all("./structures") {
         return;
     };
     if !ui_state.ready_to_export {
