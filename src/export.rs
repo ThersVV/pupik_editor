@@ -35,7 +35,7 @@ fn export(item_query: &Query<(&Transform, &ItemName), With<BuiltItem>>, ui_state
     if !ui_state.ready_to_export {
         return;
     };
-    let export_path = "./export/".to_owned() + if ui_state.name == "" {"export"} else {&ui_state.name};
+    let export_path = "./structures/".to_owned() + if ui_state.name == "" {"export"} else {&ui_state.name};
     let weight = &ui_state.weight_s;
     let file = File::create(export_path).expect("Unable to create file");
     let mut file = BufWriter::new(file);
